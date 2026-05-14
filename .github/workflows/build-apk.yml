@@ -31,31 +31,38 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y           git           file           build-essential           libssl-dev           libffi-dev           libgdk-pixbuf2.0-dev           libmpc-dev           libmpfr-dev           libgmp-dev           autoconf           libtool           pkg-config           zlib1g-dev           libncurses5-dev           libncursesw5-dev           libtinfo*           cmake           libexpat1-dev           libsqlite3-dev           wget           unzip           xz-utils           zip           libgl1-mesa-dev           libglu1-mesa-dev || true
+        sudo apt-get install -y           git           file           build-essential           libssl-dev           libffi-dev           libgdk-pixbuf2.0-dev           libmpc-dev           libmpfr-dev           libgmp-dev           autoconf           libtool           pkg-config           zlib1g-dev           libncurses5-dev           libncursesw5-dev           cmake           libexpat1-dev           libsqlite3-dev           wget           unzip           xz-utils           zip           libgl1-mesa-dev           libglu1-mesa-dev || true
       
     - name: Install Buildozer and dependencies
       run: |
         python -m pip install --upgrade pip
         pip install buildozer cython==0.29.36 packaging requests
         
-    - name: Accept Android SDK licenses and install build-tools
+    - name: Pre-accept Android SDK licenses
       run: |
-        mkdir -p ~/.android
-        echo "sdk.dir=$HOME/.android/sdk" > local.properties
-        mkdir -p $HOME/.android/sdk
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip -d $HOME/.android/sdk
-        mkdir -p $HOME/.android/sdk/cmdline-tools/latest
-        mv $HOME/.android/sdk/cmdline-tools/* $HOME/.android/sdk/cmdline-tools/latest/ 2>/dev/null || true
-        yes | $HOME/.android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        $HOME/.android/sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platforms;android-33" "platform-tools"
+        # Create android sdk directory structure
+        mkdir -p $HOME/.android
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
+        
+        # Write license acceptance files directly
+        echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.android/licenses/android-sdk-license
+        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.android/licenses/android-sdk-license
+        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" >> $HOME/.android/licenses/android-sdk-license
+        echo "84831b9409646a918e30573bab4c9c91346d8abd" > $HOME/.android/licenses/android-sdk-preview-license
+        echo "d975f751698a77b662f1254ddbeed3901e976f5a" > $HOME/.android/licenses/intel-android-extra-license
+        
+        # Also create for buildozer's sdk path
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
+        echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
         
     - name: Build APK with Buildozer
       run: |
         buildozer -v android debug
       env:
-        ANDROID_HOME: $HOME/.android/sdk
-        ANDROID_SDK_ROOT: $HOME/.android/sdk
+        ANDROID_HOME: $HOME/.buildozer/android/platform/android-sdk
+        ANDROID_SDK_ROOT: $HOME/.buildozer/android/platform/android-sdk
         
     - name: Find APK file
       id: find_apk
